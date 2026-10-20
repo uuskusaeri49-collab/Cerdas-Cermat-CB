@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBT Cerdas Cermat - TKA Style</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        .hidden-view { display: none !important; }
+        .btn-active { transform: scale(0.98); }
+        
+        /* Checkbox & Radio Customization for Exam */
+        .exam-option input[type="radio"],
+        .exam-option input[type="checkbox"] {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.75rem;
+            accent-color: #2563eb;
+        }
+        
+        /* Grid Navigation Status Colors */
+        .nav-btn.dijawab { background-color: #22c55e; color: white; border-color: #16a34a; }
+        .nav-btn.ragu { background-color: #eab308; color: white; border-color: #ca8a04; }
+        .nav-btn.aktif { border: 2px solid #2563eb; outline: 2px solid #bfdbfe; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuration setup
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'cbt-cerdas-cermat-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                // Default fallback configuration for GitHub Pages deployment
+                apiKey: "AIzaSyDemoKeyForCBTApplication12345",
+                authDomain: "cbt-cerdas-cermat.firebaseapp.com",
+                projectId: "cbt-cerdas-cermat",
+                storageBucket: "cbt-cerdas-cermat.appspot.com",
+                messagingSenderId: "1234567890",
+                appId: "1:1234567890:web:abcdef123456"
+            };
+
+        let app, db, auth;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            window.db = db;
+            window.auth = auth;
+            window.appId = appId;
+            
+            // Authenticate user
+            const initAuth = async () => {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            };
+            
+            initAuth().then(() => {
+                window.isDbReady = true;
+                if (window.initRealtimeListeners) {
+                    window.initRealtimeListeners();
+                }
+            }).catch(err => {
+                console.warn("Realtime DB running in offline/in-memory mode:", err);
+            });
+        } catch (e) {
+            console.warn("Running in local fallback mode:", e);
+        }
+    </script>
+</head>
+<body class="text-slate-800 h-screen flex flex-col">
+
+    <!-- Custom Modal (Replacing Alert) -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 p-6 transform transition-all">
+            <h3 id="modal-title" class="text-lg font-bold text-slate-900 mb-2">Pemberitahuan</h3>
+            <p id="modal-message" class="text-slate-600 mb-6">Pesan di sini.</p>
+            <div class="flex justify-end gap-3" id="modal-actions">
+                <button onclick="closeModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 1: Portal Selection -->
+    <div id="view-portal" class="flex-1 flex flex-col items-center justify-center p-4">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-blue-900 mb-4 tracking-tight">CBT Cerdas Cermat</h1>
+            <p class="text-slate-500 text-lg">Pilih portal untuk masuk ke dalam sistem penilaian terpadu.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl w-full">
+            <button onclick="switchView('view-login-admin')" class="group bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-400 transition-all text-center flex flex-col items-center">
+                <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Portal Panitia</h2>
+                <p class="text-slate-500 text-sm">Masuk sebagai admin untuk mengelola token dan memantau skor peserta.</p>
+            </button>
+
+            <button onclick="switchView('view-login-peserta')" class="group bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md hover:green-400 transition-all text-center flex flex-col items-center">
+                <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:text-white transition-colors">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Portal Peserta</h2>
+                <p class="text-slate-500 text-sm">Masuk menggunakan token untuk mulai mengerjakan ujian CBT.</p>
+            </button>
+        </div>
+    </div>
+
+    <!-- VIEW 2: Login Admin -->
+    <div id="view-login-admin" class="hidden-view flex-1 flex flex-col items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-100 max-w-md w-full relative">
+            <button onclick="switchView('view-portal')" class="absolute top-4 left-4 text-slate-400 hover:text-slate-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </button>
+            <div class="text-center mb-8 mt-2">
+                <h2 class="text-2xl font-bold text-slate-800">Login Panitia</h2>
+                <p class="text-sm text-slate-500 mt-1">Gunakan kredensial admin</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                    <input type="text" id="admin-user" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Masukkan username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                    <input type="password" id="admin-pass" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Masukkan password">
+                </div>
+                <button onclick="handleAdminLogin()" class="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors mt-4">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 3: Login Peserta -->
+    <div id="view-login-peserta" class="hidden-view flex-1 flex flex-col items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-100 max-w-md w-full relative">
+            <button onclick="switchView('view-portal')" class="absolute top-4 left-4 text-slate-400 hover:text-slate-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </button>
+            <div class="text-center mb-8 mt-2">
+                <h2 class="text-2xl font-bold text-slate-800">Login Ujian</h2>
+                <p class="text-sm text-slate-500 mt-1">Sistem Ujian Cerdas Cermat</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="peserta-nama" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none" placeholder="Contoh: Budi Santoso">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Kelompok</label>
+                    <select id="peserta-kelompok" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                        <option value="">-- Pilih Kelompok --</option>
+                        <option value="Kelompok 1">Kelompok 1 (Alpha)</option>
+                        <option value="Kelompok 2">Kelompok 2 (Beta)</option>
+                        <option value="Kelompok 3">Kelompok 3 (Gamma)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Token Ujian</label>
+                    <input type="text" id="peserta-token" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none font-mono uppercase" placeholder="XXXXXX">
+                </div>
+                <button onclick="handlePesertaLogin()" class="w-full py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors mt-4">Mulai Ujian</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 4: Admin Dashboard -->
+    <div id="view-admin-dash" class="hidden-view h-full flex flex-col">
+        <header class="bg-blue-800 text-white p-4 flex justify-between items-center shadow-md z-10">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </div>
+                <h1 class="text-xl font-bold tracking-wide">Dashboard Panitia</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-sm font-medium bg-blue-900/50 px-3 py-1 rounded-full">Halo, Admin</span>
+                <button onclick="logout()" class="text-sm hover:text-blue-200 transition-colors underline">Logout</button>
+            </div>
+        </header>
+
+        <div class="flex-1 p-6 flex gap-6 overflow-hidden">
+            <!-- Token Management -->
+            <div class="w-1/3 bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                <h2 class="text-lg font-bold text-slate-800 border-b pb-3 mb-4">Manajemen Sesi</h2>
+                <div class="flex-1">
+                    <p class="text-sm text-slate-600 mb-2">Token Aktif Saat Ini:</p>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center mb-6">
+                        <span id="display-token" class="text-4xl font-mono font-bold text-blue-700 tracking-widest">TKA123</span>
+                    </div>
+                    <button onclick="generateNewToken()" class="w-full py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors text-sm font-medium flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Generate Token Baru
+                    </button>
+                </div>
+                <div class="mt-auto pt-6 border-t">
+                    <div class="bg-yellow-50 text-yellow-800 p-3 rounded-lg text-sm">
+                        <strong>Info:</strong> Mode *in-memory* saat ini. Peserta yang berhasil menyelesaikan ujian akan menambahkan skor ke papan klasemen secara lokal.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Score -->
+            <div class="w-2/3 bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                <div class="flex justify-between items-center border-b pb-3 mb-4">
+                    <h2 class="text-lg font-bold text-slate-800">Live Score Kumulatif</h2>
+                    <span class="flex items-center gap-2 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        Real-time Terhubung
+                    </span>
+                </div>
+                <div class="flex-1 overflow-y-auto pr-2" id="leaderboard-container">
+                    <!-- Dinamis via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 5: Exam Interface (TKA Style) -->
+    <div id="view-exam" class="hidden-view h-full flex flex-col bg-slate-100">
+        <!-- Exam Header -->
+        <header class="bg-slate-800 text-white px-6 py-3 flex justify-between items-center shadow-md z-10">
+            <div class="flex flex-col">
+                <h1 class="text-xl font-bold tracking-wide">TES KEMAMPUAN AKADEMIK</h1>
+                <span class="text-xs text-slate-300" id="exam-user-info">Peserta: - | Kelompok: -</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="bg-red-600 px-4 py-2 rounded-md font-mono text-xl font-bold border-2 border-red-800 shadow-inner" id="exam-timer">
+                    60:00
+                </div>
+            </div>
+        </header>
+
+        <!-- Exam Body -->
+        <div class="flex-1 flex p-4 gap-4 overflow-hidden h-full">
+            
+            <!-- Left: Question Area -->
+            <div class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col relative h-full">
+                <!-- Question Number Bar -->
+                <div class="bg-slate-50 border-b px-6 py-3 flex justify-between items-center rounded-t-lg">
+                    <span class="font-bold text-slate-700">SOAL NO. <span id="q-number" class="text-blue-600 text-xl">1</span></span>
+                    <span class="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-md" id="q-type-badge">Pilihan Ganda</span>
+                </div>
+                
+                <!-- Question Content -->
+                <div class="p-6 overflow-y-auto flex-1 text-slate-800 text-lg leading-relaxed" id="q-content">
+                    <!-- Dinamis -->
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="bg-slate-50 border-t px-6 py-4 flex justify-between items-center rounded-b-lg mt-auto">
+                    <button onclick="navSoal(-1)" class="px-5 py-2 bg-slate-500 text-white rounded font-medium hover:bg-slate-600 transition-colors flex items-center gap-2 disabled:opacity-50" id="btn-prev">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        SOAL SEBELUMNYA
+                    </button>
+                    
+                    <label class="flex items-center gap-2 cursor-pointer bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-5 py-2 rounded font-medium transition-colors">
+                        <input type="checkbox" id="checkbox-ragu" onchange="toggleRagu()" class="w-5 h-5 accent-yellow-600">
+                        RAGU-RAGU
+                    </label>
+
+                    <button onclick="navSoal(1)" class="px-5 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50" id="btn-next">
+                        SOAL SELANJUTNYA
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Navigation Area -->
+            <div class="w-80 bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col h-full">
+                <div class="bg-slate-800 text-white text-center py-3 rounded-t-lg font-bold">
+                    NAVIGASI SOAL
+                </div>
+                
+                <div class="p-4 flex-1 overflow-y-auto">
+                    <div class="grid grid-cols-5 gap-2" id="nav-grid">
+                        <!-- Grid dinamis -->
+                    </div>
+                </div>
+
+                <div class="p-4 border-t bg-slate-50">
+                    <div class="flex flex-col gap-2 mb-4 text-xs">
+                        <div class="flex items-center gap-2"><span class="w-4 h-4 bg-green-500 rounded border border-green-600"></span> Sudah Dijawab</div>
+                        <div class="flex items-center gap-2"><span class="w-4 h-4 bg-yellow-400 rounded border border-yellow-500"></span> Ragu-ragu</div>
+                        <div class="flex items-center gap-2"><span class="w-4 h-4 bg-white rounded border border-slate-300"></span> Belum Dijawab</div>
+                    </div>
+                    <button onclick="confirmFinishExam()" class="w-full py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors">
+                        SELESAI UJIAN
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        const MOCK_TOKEN = "TKA123";
+        let currentToken = MOCK_TOKEN;
+        
+        // Papan Skor In-Memory & Cloud Sync
+        let groups = {
+            "Kelompok 1": { score: 0 },
+            "Kelompok 2": { score: 0 },
+            "Kelompok 3": { score: 0 }
+        };
+
+        // Bank Soal (Berisi 30 Soal mock)
+        const bankSoal = [];
+        
+        // Generate Mock Questions
+        // Soal 1: PG Biasa
+        bankSoal.push({
+            id: 1, type: 'pg',
+            text: "Ibukota dari negara Indonesia secara de jure pada tahun 2023 adalah...",
+            img: null,
+            options: [
+                { val: 'A', text: 'Jakarta' },
+                { val: 'B', text: 'Bandung' },
+                { val: 'C', text: 'Surabaya' },
+                { val: 'D', text: 'Nusantara' },
+                { val: 'E', text: 'Yogyakarta' }
+            ],
+            answer: 'A'
+        });
+
+        // Soal 2: Benar/Salah Gambar
+        bankSoal.push({
+            id: 2, type: 'bs',
+            text: "Perhatikan gambar di bawah ini. Bangunan bersejarah ini terletak di provinsi Jawa Tengah.",
+            img: "https://placehold.co/600x300/e2e8f0/475569?text=Gambar+Candi+Borobudur",
+            options: [
+                { val: 'A', text: 'Benar' },
+                { val: 'B', text: 'Salah' }
+            ],
+            answer: 'A'
+        });
+
+        // Soal 3: PG Kompleks
+        bankSoal.push({
+            id: 3, type: 'kompleks',
+            text: "Manakah dari hewan berikut ini yang termasuk dalam mamalia air? (Pilih semua yang benar)",
+            img: null,
+            options: [
+                { val: 'A', text: 'Paus' },
+                { val: 'B', text: 'Hiu' },
+                { val: 'C', text: 'Lumba-lumba' },
+                { val: 'D', text: 'Kuda Laut' },
+                { val: 'E', text: 'Anjing Laut' }
+            ],
+            answer: ['A', 'C', 'E'] // All or nothing
+        });
+
+        // Fill the rest up to 30 to make the grid realistic
+        for(let i = 4; i <= 30; i++) {
+            bankSoal.push({
+                id: i, type: 'pg',
+                text: `Ini adalah contoh soal simulasi nomor ${i} yang dibuat otomatis untuk memenuhi kuota 30 soal ujian CBT. Jawaban yang benar adalah A.`,
+                img: null,
+                options: [
+                    { val: 'A', text: 'Pilihan Jawaban A' },
+                    { val: 'B', text: 'Pilihan Jawaban B' },
+                    { val: 'C', text: 'Pilihan Jawaban C' },
+                    { val: 'D', text: 'Pilihan Jawaban D' },
+                    { val: 'E', text: 'Pilihan Jawaban E' }
+                ],
+                answer: 'A'
+            });
+        }
+
+        // Exam Session State
+        let participant = { name: '', group: '' };
+        let activeQuestions = [];
+        let currentQIndex = 0;
+        let answers = {}; // { qId: 'A' or ['A','B'] }
+        let raguStatuses = {}; // { qId: boolean }
+        let timeLeft = 3600; // 60 minutes
+        let timerInterval;
+
+        // --- STREAMING_CHUNK:Implementing JavaScript logic for authentication and navigation... ---
+        
+        // Modal Logic
+        function showModal(title, message, actionsHtml = null) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            
+            const actionContainer = document.getElementById('modal-actions');
+            if (actionsHtml) {
+                actionContainer.innerHTML = actionsHtml;
+            } else {
+                actionContainer.innerHTML = `<button onclick="closeModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">Tutup</button>`;
+            }
+            
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
+
+        // View Router
+        function switchView(viewId) {
+            const views = ['view-portal', 'view-login-admin', 'view-login-peserta', 'view-admin-dash', 'view-exam'];
+            views.forEach(v => document.getElementById(v).classList.add('hidden-view'));
+            document.getElementById(viewId).classList.remove('hidden-view');
+        }
+
+        function logout() {
+            switchView('view-portal');
+        }
+
+        window.initRealtimeListeners = function() {
+            if (!window.db || !window.auth || !window.auth.currentUser) return;
+            
+            try {
+                // 1. Synchronize Active Token
+                const tokenDocRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'settings', 'token_session');
+                window.onSnapshot(tokenDocRef, (snapshot) => {
+                    if (snapshot.exists() && snapshot.data().token) {
+                        currentToken = snapshot.data().token;
+                        const el = document.getElementById('display-token');
+                        if (el) el.innerText = currentToken;
+                    }
+                }, (err) => console.log("Offline listener token:", err));
+
+                // 2. Synchronize Real-time Live Scores
+                const scoresCollRef = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'scores');
+                window.onSnapshot(scoresCollRef, (snapshot) => {
+                    // Reset local score sums
+                    Object.keys(groups).forEach(g => groups[g].score = 0);
+                    
+                    snapshot.forEach((docSnap) => {
+                        const data = docSnap.data();
+                        if (data && data.group && typeof data.score === 'number') {
+                            if (!groups[data.group]) {
+                                groups[data.group] = { score: 0 };
+                            }
+                            groups[data.group].score += data.score;
+                        }
+                    });
+                    
+                    renderLeaderboard();
+                }, (err) => console.log("Offline listener scores:", err));
+            } catch (err) {
+                console.log("Realtime sync error fallback:", err);
+            }
+        };
+
+        // Admin Auth
+        function handleAdminLogin() {
+            const user = document.getElementById('admin-user').value;
+            const pass = document.getElementById('admin-pass').value;
+            if(user === 'admin' && pass === 'admin') {
+                document.getElementById('admin-user').value = '';
+                document.getElementById('admin-pass').value = '';
+                renderLeaderboard();
+                switchView('view-admin-dash');
+            } else {
+                showModal("Gagal Login", "Username atau password admin salah!");
+            }
+        }
+
+        // Admin Dash Logic
+        async function generateNewToken() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let newT = '';
+            for(let i=0; i<6; i++) newT += chars.charAt(Math.floor(Math.random() * chars.length));
+            currentToken = newT;
+            document.getElementById('display-token').innerText = currentToken;
+
+            // Save to Cloud for all connected participants
+            if (window.db && window.auth && window.auth.currentUser) {
+                try {
+                    const tokenDocRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'settings', 'token_session');
+                    await window.setDoc(tokenDocRef, { token: newT, updatedAt: Date.now() });
+                } catch(e) {
+                    console.log("Saved token locally");
+                }
+            }
+        }
+
+        function renderLeaderboard() {
+            const container = document.getElementById('leaderboard-container');
+            container.innerHTML = '';
+            
+            // Sort groups by score descending
+            const sorted = Object.entries(groups).sort((a,b) => b[1].score - a[1].score);
+            
+            sorted.forEach(([name, data], index) => {
+                let badge = '';
+                if(index === 0) badge = '👑';
+                container.innerHTML += `
+                    <div class="flex justify-between items-center p-4 mb-3 rounded-lg border border-slate-100 bg-slate-50 hover:bg-white transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center">${index+1}</div>
+                            <span class="font-bold text-slate-700 text-lg">${name} ${badge}</span>
+                        </div>
+                        <div class="text-2xl font-black text-slate-800">${data.score} <span class="text-sm font-normal text-slate-500">Poin</span></div>
+                    </div>
+                `;
+            });
+        }
+
+        // Peserta Auth
+        function handlePesertaLogin() {
+            const nama = document.getElementById('peserta-nama').value.trim();
+            const kel = document.getElementById('peserta-kelompok').value;
+            const token = document.getElementById('peserta-token').value.trim().toUpperCase();
+
+            if(!nama || !kel || !token) {
+                showModal("Peringatan", "Harap isi semua bidang formulir!");
+                return;
+            }
+
+            if(token !== currentToken) {
+                showModal("Akses Ditolak", "Token ujian tidak valid atau sudah kadaluarsa.");
+                return;
+            }
+
+            participant = { name: nama, group: kel };
+            startExam();
+        }
+
+        // --- STREAMING_CHUNK:Adding exam interactions and timer logic... ---
+        
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function startExam() {
+            // Setup Session
+            document.getElementById('exam-user-info').innerText = `Peserta: ${participant.name} | ${participant.group}`;
+            
+            // Pengacakan soal untuk peserta (Fisher-Yates)
+            activeQuestions = shuffleArray(bankSoal);
+            currentQIndex = 0;
+            answers = {};
+            raguStatuses = {};
+            timeLeft = 3600; // 60 menit reset
+            
+            generateNavGrid();
+            loadQuestion(0);
+            switchView('view-exam');
+
+            // Start Timer
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            if(timeLeft <= 0) {
+                clearInterval(timerInterval);
+                finishExam(true); // auto submit
+                return;
+            }
+            timeLeft--;
+            const m = Math.floor(timeLeft / 60);
+            const s = Math.floor(timeLeft % 60);
+            document.getElementById('exam-timer').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            if(timeLeft < 300) { // 5 mins left warning
+                document.getElementById('exam-timer').classList.replace('bg-red-600', 'bg-red-700');
+                document.getElementById('exam-timer').classList.add('animate-pulse');
+            }
+        }
+
+        function generateNavGrid() {
+            const grid = document.getElementById('nav-grid');
+            grid.innerHTML = '';
+            activeQuestions.forEach((q, index) => {
+                const btn = document.createElement('button');
+                btn.className = `nav-btn w-full py-2 border border-slate-300 rounded font-medium text-sm transition-all text-slate-700 hover:bg-slate-100`;
+                btn.innerText = index + 1;
+                btn.id = `nav-btn-${index}`;
+                btn.onclick = () => loadQuestion(index);
+                grid.appendChild(btn);
+            });
+        }
+
+        function updateNavStyles() {
+            activeQuestions.forEach((q, index) => {
+                const btn = document.getElementById(`nav-btn-${index}`);
+                btn.className = `nav-btn w-full py-2 border border-slate-300 rounded font-medium text-sm transition-all`;
+                
+                let isAnswered = answers[q.id] !== undefined && answers[q.id] !== '';
+                if(Array.isArray(answers[q.id])) isAnswered = answers[q.id].length > 0;
+
+                if (raguStatuses[q.id]) {
+                    btn.classList.add('ragu');
+                } else if (isAnswered) {
+                    btn.classList.add('dijawab');
+                } else {
+                    btn.classList.add('text-slate-700', 'hover:bg-slate-100', 'bg-white');
+                }
+
+                if (index === currentQIndex) {
+                    btn.classList.add('aktif');
+                }
+            });
+        }
+
+        function loadQuestion(index) {
+            currentQIndex = index;
+            const q = activeQuestions[index];
+            
+            document.getElementById('q-number').innerText = index + 1;
+            
+            let typeLabel = "Pilihan Ganda";
+            if(q.type === 'bs') typeLabel = "Benar / Salah";
+            if(q.type === 'kompleks') typeLabel = "Pilihan Ganda Kompleks";
+            document.getElementById('q-type-badge').innerText = typeLabel;
+
+            let html = ``;
+            if(q.img) {
+                html += `<img src="${q.img}" alt="Ilustrasi" class="max-w-full h-auto mb-6 rounded border">`;
+            }
+            html += `<p class="mb-6 font-medium">${q.text}</p><div class="space-y-3">`;
+
+            const currentAns = answers[q.id];
+
+            q.options.forEach(opt => {
+                let isChecked = false;
+                if(q.type === 'kompleks') {
+                    if(Array.isArray(currentAns) && currentAns.includes(opt.val)) isChecked = true;
+                    html += `
+                    <label class="flex items-center p-4 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors exam-option">
+                        <input type="checkbox" name="q-${q.id}" value="${opt.val}" ${isChecked ? 'checked' : ''} onchange="saveAnswer('${q.type}', ${q.id})">
+                        <span><strong class="mr-2">${opt.val}.</strong> ${opt.text}</span>
+                    </label>`;
+                } else {
+                    if(currentAns === opt.val) isChecked = true;
+                    html += `
+                    <label class="flex items-center p-4 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors exam-option">
+                        <input type="radio" name="q-${q.id}" value="${opt.val}" ${isChecked ? 'checked' : ''} onchange="saveAnswer('${q.type}', ${q.id})">
+                        <span><strong class="mr-2">${opt.val}.</strong> ${opt.text}</span>
+                    </label>`;
+                }
+            });
+            html += `</div>`;
+            
+            document.getElementById('q-content').innerHTML = html;
+            
+            // Checkbox Ragu
+            document.getElementById('checkbox-ragu').checked = !!raguStatuses[q.id];
+
+            // Buttons
+            document.getElementById('btn-prev').disabled = (index === 0);
+            document.getElementById('btn-next').disabled = (index === activeQuestions.length - 1);
+
+            updateNavStyles();
+        }
+
+        function saveAnswer(type, qId) {
+            if(type === 'kompleks') {
+                const checkboxes = document.querySelectorAll(`input[name="q-${qId}"]:checked`);
+                let vals = [];
+                checkboxes.forEach(cb => vals.push(cb.value));
+                answers[qId] = vals;
+            } else {
+                const radio = document.querySelector(`input[name="q-${qId}"]:checked`);
+                if(radio) answers[qId] = radio.value;
+            }
+            updateNavStyles();
+        }
+
+        function toggleRagu() {
+            const q = activeQuestions[currentQIndex];
+            raguStatuses[q.id] = document.getElementById('checkbox-ragu').checked;
+            updateNavStyles();
+        }
+
+        function navSoal(step) {
+            const newIdx = currentQIndex + step;
+            if(newIdx >= 0 && newIdx < activeQuestions.length) {
+                loadQuestion(newIdx);
+            }
+        }
+
+        function confirmFinishExam() {
+            // Cek jika ada yang belum dijawab
+            let answeredCount = 0;
+            activeQuestions.forEach(q => {
+                let isAnswered = answers[q.id] !== undefined && answers[q.id] !== '';
+                if(Array.isArray(answers[q.id])) isAnswered = answers[q.id].length > 0;
+                if(isAnswered) answeredCount++;
+            });
+
+            const unans = activeQuestions.length - answeredCount;
+            let msg = `Anda sudah menjawab ${answeredCount} dari ${activeQuestions.length} soal.`;
+            if(unans > 0) msg += ` Terdapat ${unans} soal yang BELUM dijawab!`;
+            msg += `<br><br>Apakah Anda yakin ingin mengakhiri ujian sekarang?`;
+
+            const actions = `
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-300 text-slate-800 rounded-lg font-medium hover:bg-slate-400 transition-colors">Batal</button>
+                <button onclick="finishExam()" class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">Ya, Selesai</button>
+            `;
+            showModal("Konfirmasi Selesai", msg, actions);
+            document.getElementById('modal-message').innerHTML = msg; // allow HTML tags
+        }
+
+        function finishExam(isAuto = false) {
+            clearInterval(timerInterval);
+            closeModal();
+
+            // Kalkulasi Nilai
+            let finalScore = 0;
+            activeQuestions.forEach(q => {
+                const usrAns = answers[q.id];
+                if(q.type === 'kompleks') {
+                    // All or Nothing logic
+                    if(Array.isArray(usrAns) && Array.isArray(q.answer)) {
+                        const isMatch = usrAns.length === q.answer.length && usrAns.every(v => q.answer.includes(v));
+                        if(isMatch) finalScore += 5; // Bobot lebih besar utk kompleks
+                    }
+                } else {
+                    if(usrAns === q.answer) finalScore += 2; // PG biasa/BS bobot 2
+                }
+            });
+
+            // Tambahkan ke sistem kelompok (In-Memory Simulation)
+            if(groups[participant.group]) {
+                groups[participant.group].score += finalScore;
+            }
+
+            if (window.db && window.auth && window.auth.currentUser) {
+                try {
+                    const scoresCollRef = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'scores');
+                    window.addDoc(scoresCollRef, {
+                        participantName: participant.name,
+                        group: participant.group,
+                        score: finalScore,
+                        submittedAt: Date.now()
+                    });
+                } catch(e) {
+                    console.log("Score recorded locally.");
+                }
+            }
+
+            let msg = `Terima kasih, ${participant.name}. Jawaban Anda telah tersimpan. Skor Anda: ${finalScore}`;
+            if(isAuto) msg = `Waktu Habis! Jawaban Anda otomatis tersimpan. Skor Anda: ${finalScore}`;
+
+            const actions = `<button onclick="switchBackToPortal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">Kembali ke Beranda</button>`;
+            showModal("Ujian Selesai", msg, actions);
+        }
+
+        function switchBackToPortal() {
+            closeModal();
+            document.getElementById('peserta-nama').value = '';
+            document.getElementById('peserta-token').value = '';
+            document.getElementById('peserta-kelompok').value = '';
+            switchView('view-portal');
+        }
+
+    </script>
+</body>
+</html>
