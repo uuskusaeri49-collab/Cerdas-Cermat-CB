@@ -496,8 +496,6 @@
         let timeLeft = 3600; // 60 minutes
         let timerInterval;
 
-        // --- STREAMING_CHUNK:Implementing JavaScript logic for authentication and navigation... ---
-        
         // Modal Logic
         function showModal(title, message, actionsHtml = null) {
             document.getElementById('modal-title').innerText = title;
@@ -640,8 +638,6 @@
             startExam();
         }
 
-        // --- STREAMING_CHUNK:Adding exam interactions and timer logic... ---
-        
         function shuffleArray(array) {
             let arr = [...array];
             for (let i = arr.length - 1; i > 0; i--) {
@@ -735,9 +731,10 @@
 
             let html = ``;
             if(q.img) {
-                html += `<img src="${q.img}" alt="Ilustrasi" class="max-w-full h-auto mb-6 rounded border">`;
+                // Gambar dibatasi tinggi maksimal (max-h-64/256px) dan diletakkan secara rapi di tengah
+                html += `<div class="text-center mb-4"><img src="${q.img}" alt="Ilustrasi Soal" class="max-h-64 max-w-full object-contain inline-block rounded-lg border border-slate-200 shadow-sm"></div>`;
             }
-            html += `<p class="mb-6 font-medium">${q.text}</p><div class="space-y-3">`;
+            html += `<p class="mb-6 font-medium text-slate-800">${q.text}</p><div class="space-y-3">`;
 
             const currentAns = answers[q.id];
 
