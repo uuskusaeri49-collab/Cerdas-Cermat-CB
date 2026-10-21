@@ -459,17 +459,16 @@
 			],
 			answer: 'B'
 		});
-		
-        // Soal 2: Benar/Salah Gambar
+
+        // Soal 2: Benar/Salah (Matriks Tabel Baru)
         bankSoal.push({
             id: 2, type: 'bs',
-            text: "Perhatikan gambar di bawah ini. Bangunan bersejarah ini terletak di provinsi Jawa Tengah.",
-            img: "https://placehold.co/600x300/e2e8f0/475569?text=Gambar+Candi+Borobudur",
-            options: [
-                { val: 'A', text: 'Benar' },
-                { val: 'B', text: 'Salah' }
-            ],
-            answer: 'A'
+            text: "Di dalam sebuah taman umum berukuran 20m 20m akan dibangun sebuah kolam berbentuk lingkaran tepat di tengah-tengahnya. Area tanah berumput di luar kolam tersebut perlu diukur luasnya. Tentukan Benar (B) atau Salah (S):",
+            img: "nomor_satu",
+            statements: [
+                { id: 's1', text: "1.	Luas area berumput bisa dihitung dengan cara mengurangkan luas persegi taman dengan luas lingkaran kolam.", answer: 'B' },
+                { id: 's2', text: "2.	Keliling pinggiran kolam murni hanya bergantung pada panjang jari-jari kolam yang dibangun.", answer: 'B' },
+            ]
         });
 
         // Soal 3: PG Kompleks
@@ -487,11 +486,28 @@
             answer: ['A', 'C', 'E'] // All or nothing
         });
 
+        // Fill the rest up to 30 to make the grid realistic
+        for(let i = 4; i <= 30; i++) {
+            bankSoal.push({
+                id: i, type: 'pg',
+                text: `Ini adalah contoh soal simulasi nomor ${i} yang dibuat otomatis untuk memenuhi kuota 30 soal ujian CBT. Jawaban yang benar adalah A.`,
+                img: null,
+                options: [
+                    { val: 'A', text: 'Pilihan Jawaban A' },
+                    { val: 'B', text: 'Pilihan Jawaban B' },
+                    { val: 'C', text: 'Pilihan Jawaban C' },
+                    { val: 'D', text: 'Pilihan Jawaban D' },
+                    { val: 'E', text: 'Pilihan Jawaban E' }
+                ],
+                answer: 'A'
+            });
+        }
+
         // Exam Session State
         let participant = { name: '', group: '' };
         let activeQuestions = [];
         let currentQIndex = 0;
-        let answers = {}; // { qId: 'A' or ['A','B'] }
+        let answers = {}; // { qId: 'A' or ['A','B'] or {s1:'B', s2:'S'} }
         let raguStatuses = {}; // { qId: boolean }
         let timeLeft = 3600; // 60 minutes
         let timerInterval;
@@ -701,8 +717,15 @@
                 const btn = document.getElementById(`nav-btn-${index}`);
                 btn.className = `nav-btn w-full py-2 border border-slate-300 rounded font-medium text-sm transition-all`;
                 
-                let isAnswered = answers[q.id] !== undefined && answers[q.id] !== '';
-                if(Array.isArray(answers[q.id])) isAnswered = answers[q.id].length > 0;
+                let isAnswered = false;
+                if(q.type === 'kompleks') {
+                    isAnswered = Array.isArray(answers[q.id]) && answers[q.id].length > 0;
+                } else if (q.type === 'bs') {
+                    // Dianggap dijawab PENUH jika SEMUA baris pernyataan sudah dipilih
+                    isAnswered = answers[q.id] && Object.keys(answers[q.id]).length === q.statements.length;
+                } else {
+                    isAnswered = answers[q.id] !== undefined && answers[q.id] !== '';
+                }
 
                 if (raguStatuses[q.id]) {
                     btn.classList.add('ragu');
@@ -725,7 +748,7 @@
             document.getElementById('q-number').innerText = index + 1;
             
             let typeLabel = "Pilihan Ganda";
-            if(q.type === 'bs') typeLabel = "Benar / Salah";
+            if(q.type === 'bs') typeLabel = "Benar / Salah (Matriks)";
             if(q.type === 'kompleks') typeLabel = "Pilihan Ganda Kompleks";
             document.getElementById('q-type-badge').innerText = typeLabel;
 
@@ -734,29 +757,66 @@
                 // Gambar dibatasi tinggi maksimal (max-h-64/256px) dan diletakkan secara rapi di tengah
                 html += `<div class="text-center mb-4"><img src="${q.img}" alt="Ilustrasi Soal" class="max-h-64 max-w-full object-contain inline-block rounded-lg border border-slate-200 shadow-sm"></div>`;
             }
-            html += `<p class="mb-6 font-medium text-slate-800">${q.text}</p><div class="space-y-3">`;
+            html += `<p class="mb-6 font-medium text-slate-800">${q.text}</p>`;
 
             const currentAns = answers[q.id];
 
-            q.options.forEach(opt => {
-                let isChecked = false;
-                if(q.type === 'kompleks') {
-                    if(Array.isArray(currentAns) && currentAns.includes(opt.val)) isChecked = true;
+            // Render Form berdasarkan tipe soal
+            if(q.type === 'bs') {
+                html += `
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse border border-slate-200 mb-4 bg-white">
+                        <thead class="bg-slate-50 border-b border-slate-300">
+                            <tr>
+                                <th class="border border-slate-200 p-4 text-left font-bold text-slate-700">Pernyataan</th>
+                                <th class="border border-slate-200 p-4 text-center w-24 font-bold text-slate-700">Benar</th>
+                                <th class="border border-slate-200 p-4 text-center w-24 font-bold text-slate-700">Salah</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                
+                const bsAnswers = answers[q.id] || {};
+                
+                q.statements.forEach((stmt) => {
+                    const isB = bsAnswers[stmt.id] === 'B' ? 'checked' : '';
+                    const isS = bsAnswers[stmt.id] === 'S' ? 'checked' : '';
                     html += `
-                    <label class="flex items-center p-4 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors exam-option">
-                        <input type="checkbox" name="q-${q.id}" value="${opt.val}" ${isChecked ? 'checked' : ''} onchange="saveAnswer('${q.type}', ${q.id})">
-                        <span><strong class="mr-2">${opt.val}.</strong> ${opt.text}</span>
-                    </label>`;
-                } else {
-                    if(currentAns === opt.val) isChecked = true;
-                    html += `
-                    <label class="flex items-center p-4 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors exam-option">
-                        <input type="radio" name="q-${q.id}" value="${opt.val}" ${isChecked ? 'checked' : ''} onchange="saveAnswer('${q.type}', ${q.id})">
-                        <span><strong class="mr-2">${opt.val}.</strong> ${opt.text}</span>
-                    </label>`;
-                }
-            });
-            html += `</div>`;
+                            <tr class="hover:bg-blue-50 transition-colors">
+                                <td class="border border-slate-200 p-4 text-slate-800 leading-relaxed">${stmt.text}</td>
+                                <td class="border border-slate-200 p-4 text-center align-middle cursor-pointer" onclick="document.getElementById('rb-${q.id}-${stmt.id}-B').click()">
+                                    <input type="radio" id="rb-${q.id}-${stmt.id}-B" name="q-${q.id}-${stmt.id}" value="B" ${isB} onchange="saveAnswerBS(${q.id}, '${stmt.id}', 'B')" class="w-5 h-5 accent-blue-600 cursor-pointer">
+                                </td>
+                                <td class="border border-slate-200 p-4 text-center align-middle cursor-pointer" onclick="document.getElementById('rb-${q.id}-${stmt.id}-S').click()">
+                                    <input type="radio" id="rb-${q.id}-${stmt.id}-S" name="q-${q.id}-${stmt.id}" value="S" ${isS} onchange="saveAnswerBS(${q.id}, '${stmt.id}', 'S')" class="w-5 h-5 accent-blue-600 cursor-pointer">
+                                </td>
+                            </tr>
+                    `;
+                });
+                
+                html += `</tbody></table></div>`;
+            } 
+            else {
+                html += `<div class="space-y-3">`;
+                q.options.forEach(opt => {
+                    let isChecked = false;
+                    if(q.type === 'kompleks') {
+                        if(Array.isArray(currentAns) && currentAns.includes(opt.val)) isChecked = true;
+                        html += `
+                        <label class="flex items-center p-4 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors exam-option">
+                            <input type="checkbox" name="q-${q.id}" value="${opt.val}" ${isChecked ? 'checked' : ''} onchange="saveAnswer('${q.type}', ${q.id})">
+                            <span><strong class="mr-2">${opt.val}.</strong> ${opt.text}</span>
+                        </label>`;
+                    } else {
+                        if(currentAns === opt.val) isChecked = true;
+                        html += `
+                        <label class="flex items-center p-4 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors exam-option">
+                            <input type="radio" name="q-${q.id}" value="${opt.val}" ${isChecked ? 'checked' : ''} onchange="saveAnswer('${q.type}', ${q.id})">
+                            <span><strong class="mr-2">${opt.val}.</strong> ${opt.text}</span>
+                        </label>`;
+                    }
+                });
+                html += `</div>`;
+            }
             
             document.getElementById('q-content').innerHTML = html;
             
@@ -770,6 +830,7 @@
             updateNavStyles();
         }
 
+        // Fungsi simpan jawaban PG / PG Kompleks
         function saveAnswer(type, qId) {
             if(type === 'kompleks') {
                 const checkboxes = document.querySelectorAll(`input[name="q-${qId}"]:checked`);
@@ -780,6 +841,13 @@
                 const radio = document.querySelector(`input[name="q-${qId}"]:checked`);
                 if(radio) answers[qId] = radio.value;
             }
+            updateNavStyles();
+        }
+
+        // Fungsi simpan jawaban khusus Benar/Salah Matriks
+        window.saveAnswerBS = function(qId, stmtId, val) {
+            if(!answers[qId]) answers[qId] = {};
+            answers[qId][stmtId] = val;
             updateNavStyles();
         }
 
@@ -797,17 +865,24 @@
         }
 
         function confirmFinishExam() {
-            // Cek jika ada yang belum dijawab
+            // Cek jika ada yang belum dijawab penuh
             let answeredCount = 0;
             activeQuestions.forEach(q => {
-                let isAnswered = answers[q.id] !== undefined && answers[q.id] !== '';
-                if(Array.isArray(answers[q.id])) isAnswered = answers[q.id].length > 0;
+                let isAnswered = false;
+                if(q.type === 'kompleks') {
+                    isAnswered = Array.isArray(answers[q.id]) && answers[q.id].length > 0;
+                } else if (q.type === 'bs') {
+                    isAnswered = answers[q.id] && Object.keys(answers[q.id]).length === q.statements.length;
+                } else {
+                    isAnswered = answers[q.id] !== undefined && answers[q.id] !== '';
+                }
+                
                 if(isAnswered) answeredCount++;
             });
 
             const unans = activeQuestions.length - answeredCount;
-            let msg = `Anda sudah menjawab ${answeredCount} dari ${activeQuestions.length} soal.`;
-            if(unans > 0) msg += ` Terdapat ${unans} soal yang BELUM dijawab!`;
+            let msg = `Anda sudah menjawab ${answeredCount} dari ${activeQuestions.length} soal (secara penuh).`;
+            if(unans > 0) msg += ` Terdapat ${unans} soal yang BELUM dijawab! (Pastikan soal Benar/Salah dijawab semua pernyataannya).`;
             msg += `<br><br>Apakah Anda yakin ingin mengakhiri ujian sekarang?`;
 
             const actions = `
@@ -826,14 +901,27 @@
             let finalScore = 0;
             activeQuestions.forEach(q => {
                 const usrAns = answers[q.id];
+                
                 if(q.type === 'kompleks') {
                     // All or Nothing logic
                     if(Array.isArray(usrAns) && Array.isArray(q.answer)) {
                         const isMatch = usrAns.length === q.answer.length && usrAns.every(v => q.answer.includes(v));
                         if(isMatch) finalScore += 5; // Bobot lebih besar utk kompleks
                     }
-                } else {
-                    if(usrAns === q.answer) finalScore += 2; // PG biasa/BS bobot 2
+                } 
+                else if (q.type === 'bs') {
+                    // Tiap baris pernyataan yang benar dapat 1 poin
+                    if(usrAns && typeof usrAns === 'object') {
+                        q.statements.forEach(stmt => {
+                            if(usrAns[stmt.id] === stmt.answer) {
+                                finalScore += 1;
+                            }
+                        });
+                    }
+                }
+                else {
+                    // PG Biasa
+                    if(usrAns === q.answer) finalScore += 2; // PG biasa bobot 2
                 }
             });
 
