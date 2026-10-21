@@ -414,7 +414,7 @@
 		bankSoal.push({
 			id: 8, type: 'pg',
 			text: "Di antara pilihan jaring-jaring A, B, C, dan D berikut, manakah jaring-jaring yang tepat dan bisa dilipat untuk membentuk dadu beserta posisi titik-titiknya?",
-			img: null,
+			img: "no.17.jpg",
 			options: [
 				{ val: 'A', text: 'Jaring-jaring D' },
 				{ val: 'B', text: 'Jaring-jaring A' },
@@ -481,38 +481,187 @@
 				{ id: 's4', text: "Panjang sisa kayu tersebut kurang dari 1,5 meter.", answer: 'S' }
             ]
         });
+		bankSoal.push({
+            id: 14, type: 'bs',
+            text: "Tentukan apakah pernyataan berikut Benar (B) atau Salah (S):",
+            img: "3.jpg",
+            statements: [
+                { id: 's1', text: "Pola ke-4 akan membutuhkan 13 batang korek api.", answer: 'B' },
+                { id: 's2', text: "Setiap kali pola berubah, susunan batang korek api selalu bertambah sebanyak 4 batang", answer: 'S' }
+            ]
+        });
+		bankSoal.push({
+            id: 15, type: 'bs',
+            text: "Pilih pernyataan yang mendeskripsikan pandangan bangun 3D tersebut dengan paling akurat. (Pilih semua jawaban yang benar).",
+            img: "no4.jpg",
+            statements: [
+                { id: 's1', text: "Pandangan lurus dari atas akan terlihat seperti 4 buah kotak persegi yang menyambung. ", answer: 'B' },
+                { id: 's2', text: "Pandangan lurus dari depan membentuk huruf L terbalik.", answer: 'B' },
+				{ id: 's3', text: "Pandangan lurus dari sisi kanan menampilkan 2 kotak persegi yang tersusun secara vertikal. ", answer: 'S' }
+            ]
+        });
+		
 
         // Soal 3: PG Kompleks
         bankSoal.push({
-            id: 3, type: 'kompleks',
-            text: "Manakah dari hewan berikut ini yang termasuk dalam mamalia air? (Pilih semua yang benar)",
+            id: 16, type: 'kompleks',
+            text: "Pilih pernyataan yang memberikan penafsiran tabel data ini dengan benar! (Pilih semua jawaban yang tepat).",
+            img: "no5.jpg",
+            options: [
+                { val: 'A', text: 'Kelompok siswa paling banyak memiliki berat badan 35 kg.' },
+                { val: 'B', text: 'Total keseluruhan siswa yang ditimbang dalam catatan ini adalah 20 orang.' },
+                { val: 'C', text: 'Sebanyak 8 orang siswa teridentifikasi memiliki berat badan di bawah 35 kg.' },
+                { val: 'D', text: 'Terdapat sejumlah 3 orang siswa yang tercatat memiliki berat badan 40 kg.' }
+            ],
+            answer: ['A', 'B', 'D'] // All or nothing
+        });
+		bankSoal.push({
+            id: 17, type: 'kompleks',
+            text: "Dalam sebuah perlombaan kuis, setiap jawaban yang benar diberi skor 5. Tim Merah telah menjawab sejumlah x pertanyaan dengan benar dan mendapat skor bonus tambahan sebanyak 10 poin. Pilih kalimat matematika yang tepat untuk menghitung total skor (M) Tim Merah! ",
             img: null,
             options: [
-                { val: 'A', text: 'Paus' },
-                { val: 'B', text: 'Hiu' },
-                { val: 'C', text: 'Lumba-lumba' },
-                { val: 'D', text: 'Kuda Laut' },
-                { val: 'E', text: 'Anjing Laut' }
+                { val: 'A', text: 'M = 5x + 10 ' },
+                { val: 'B', text: 'M = 5(x + 10)' },
+                { val: 'C', text: 'Total skor dihitung dengan mengalikan jumlah jawaban benar dengan 5, kemudian ditambah dengan 10.' },
+                { val: 'D', text: 'M = 10x + 5' }
             ],
-            answer: ['A', 'C', 'E'] // All or nothing
+            answer: ['A', 'C'] // All or nothing
         });
-
-        // Fill the rest up to 30 to make the grid realistic
-        for(let i = 4; i <= 30; i++) {
-            bankSoal.push({
-                id: i, type: 'pg',
-                text: `Ini adalah contoh soal simulasi nomor ${i} yang dibuat otomatis untuk memenuhi kuota 30 soal ujian CBT. Jawaban yang benar adalah A.`,
-                img: null,
-                options: [
-                    { val: 'A', text: 'Pilihan Jawaban A' },
-                    { val: 'B', text: 'Pilihan Jawaban B' },
-                    { val: 'C', text: 'Pilihan Jawaban C' },
-                    { val: 'D', text: 'Pilihan Jawaban D' },
-                    { val: 'E', text: 'Pilihan Jawaban E' }
-                ],
-                answer: 'A'
-            });
-        }
+		bankSoal.push({
+			id: 18, type: 'pg',
+			text: "Perhatikan urutan pola bilangan berikut: 4, 9, 14, 19, ... Bilangan selanjutnya dalam urutan ini adalah... ",
+			img: "gambar_timbangan.jpg",
+			options: [
+				{ val: 'A', text: '24 },
+				{ val: 'B', text: '22' },
+				{ val: 'C', text: '23' },
+				{ val: 'D', text: '25' }
+			],
+			answer: 'A'
+		});
+		bankSoal.push({
+            id: 19, type: 'kompleks',
+            text: "Sebuah sekolah menerima sumbangan dana sebesar Rp 543.200. Pilih pernyataan yang menunjukkan dekomposisi (pemisahan nilai tempat) yang benar untuk jumlah uang tersebut! (Pilih semua jawaban yang tepat).",
+            img: null,
+            options: [
+                { val: 'A', text: '500.000 + 40.000 + 3.000 + 200' },
+                { val: 'B', text: '5 ratus ribu + 4 puluh ribu + 3 ribu + 2 ratus' },
+                { val: 'C', text: '540.000 + 30.000 + 200' },
+                { val: 'D', text: '500.000 + 43.000 + 20' }
+            ],
+            answer: ['A', 'B', 'C'] // All or nothing
+        });
+		bankSoal.push({
+            id: 20, type: 'kompleks',
+            text: "Ahmad membeli 3 batang pensil dan 1 buah buku dengan menggunakan selembar uang Rp 50.000. Pilih pernyataan yang tepat! (Pilih semua jawaban yang benar).",
+            img: "no.9.jpg",
+            options: [
+                { val: 'A', text: 'Total harga seluruh barang yang dibeli adalah Rp 21.000.' },
+                { val: 'B', text: 'Jumlah uang kembalian yang akan diterima Ahmad adalah Rp 29.000.' },
+                { val: 'C', text: 'Harga untuk 3 batang pensil saja adalah Rp 6.000.' },
+                { val: 'D', text: 'Uang kembalian Ahmad bernilai kurang dari Rp 20.000.' }
+            ],
+            answer: ['A', 'B', 'C'] // All or nothing
+        });
+		bankSoal.push({
+            id: 21, type: 'kompleks',
+            text: "Di antara pernyataan berikut, manakah cara memperkirakan ukuran sudut yang paling tepat? (Pilih semua jawaban yang benar).",
+            img: "no.9.jpg",
+            options: [
+                { val: 'A', text: 'Sudut siku-siku memiliki bukaan tepat 90°.' },
+                { val: 'B', text: 'Sudut tumpul selalu memiliki ukuran lebih besar dari 180°.' },
+                { val: 'C', text: 'Sudut lancip adalah sudut yang besarnya kurang dari 90°.' }
+            ],
+            answer: ['A', 'C'] // All or nothing
+        });
+		bankSoal.push({
+            id: 22, type: 'kompleks',
+            text: "Ali berlatih sepak bola setiap 4 hari sekali, sedangkan Budi berlatih setiap 6 hari sekali di lapangan yang sama. Jika mereka berlatih bersama-sama pada tanggal 2 Mei, pilih pernyataan yang benar. (Bisa memilih lebih dari satu jawaban).",
+            img: "no12.jpg",
+            options: [
+                { val: 'A', text: 'Mereka akan selalu berlatih bersama-sama setiap 12 hari sekali.' },
+                { val: 'B', text: 'Mereka akan berlatih bersama-sama untuk kedua kalinya pada tanggal 14 Mei.' },
+                { val: 'C', text: 'Nilai KPK dari jadwal latihan mereka adalah 24.' }
+				{ val: 'D', text: 'Mereka akan bertemu lagi di lapangan pada tanggal 10 Mei.' }
+            ],
+            answer: ['A', 'B'] // All or nothing
+        });
+		bankSoal.push({
+            id: 23, type: 'bs',
+            text: "Tentukan Benar (B) atau Salah (S) untuk setiap kesimpulan pernyataan berikut:",
+            img: "no13.jpg",
+            statements: [
+                { id: 's1', text: "Total penjualan untuk bulan Maret dan bulan April adalah hasil penjumlahan tinggi kedua batang yang kemudian dikalikan dengan skala angka pada sumbu vertikalnya.", answer: 'S' },
+                { id: 's2', text: "Selisih antara jumlah penjualan tertinggi dan terendah dapat dihitung dengan mencari beda nilai pada batang tertinggi dan batang terendah di dalam grafik.", answer: 'B' }
+            ]
+        });
+		bankSoal.push({
+            id: 24, type: 'bs',
+            text: "Tentukan Benar (B) atau Salah (S) untuk setiap kesimpulan pernyataan berikut:",
+            img: "no14.jpg",
+            statements: [
+                { id: 's1', text: "Jumlah keempat sudut di dalam layang-layang adalah 360.", answer: 'B' },
+                { id: 's2', text: "Sudut di bagian bawah layang-layang tersebut besarnya 40.", answer: 'B' }
+            ]
+        });
+		bankSoal.push({
+            id: 25, type: 'bs',
+            text: "Berdasarkan bangun datar tersebut, pilih semua ciri-ciri yang tepat! (Pilih semua jawaban yang benar). ",
+            img: "no.18.jpg",
+            statements: [
+                { id: 's1', text: "Ukuran keliling bangun gabungan ini hanya diperoleh dengan menjumlahkan ukuran semua sisi luarnya saja.", answer: 'B' },
+                { id: 's2', text: "Luas keseluruhan bangun gabungan ini dihitung dengan mengalikan luas persegi panjang dengan luas segitiga.", answer: 'S' }
+            ]
+        });
+		bankSoal.push({
+            id: 26, type: 'kompleks',
+            text: "Di antara pernyataan berikut, manakah cara memperkirakan ukuran sudut yang paling tepat? (Pilih semua jawaban yang benar).",
+            img: "No.21.jpg",
+            options: [
+                { val: 'A', text: 'Memiliki 4 sisi luar yang sama panjang.' },
+                { val: 'B', text: 'Memiliki 4 sudut siku-siku yang sama besar.' },
+                { val: 'C', text: 'Sudut-sudut yang saling berhadapan besarnya sama.' },
+				{ val: 'D', text: 'Memiliki 2 garis diagonal yang berpotongan tegak lurus (membentuk sudut 90).' }
+            ],
+            answer: ['A', 'C', 'D'] // All or nothing
+        });
+		bankSoal.push({
+            id: 27, type: 'bs',
+            text: "Berdasarkan bangun datar tersebut, pilih semua ciri-ciri yang tepat! (Pilih semua jawaban yang benar). ",
+            img: "no24.png",
+            statements: [
+                { id: 's1', text: "Jika pada hari Selasa terdapat 4 ikon buku penuh, ini berarti ada sebanyak 40 buah buku yang telah dipinjam.", answer: 'B' },
+                { id: 's2', text: "Jumlah pinjaman pada hari yang memuat gambar 2,5 ikon buku mengartikan total ada 25 buah buku.", answer: 'B' }
+            ]
+        });
+		bankSoal.push({
+            id: 28, type: 'bs',
+            text: "Ibu Siti ingin membagikan buah-buahan tersebut ke dalam beberapa keranjang dengan jumlah apel dan jeruk yang sama banyak di setiap keranjangnya. Tentukan Benar (B) atau Salah (S) untuk pernyataan di bawah ini:",
+            img: "no25.png",
+            statements: [
+                { id: 's1', text: "Jumlah keranjang paling banyak yang diperlukan adalah 12 keranjang.", answer: 'B' },
+                { id: 's2', text: "Setiap keranjang akan berisi 3 buah apel. ", answer: 'S' },
+				{ id: 's3', text: "Setiap keranjang akan berisi 3 buah jeruk", answer: 'B' }
+            ]
+        });
+		bankSoal.push({
+            id: 29, type: 'bs',
+            text: "Pak Abu memiliki sebuah taman bermain berbentuk persegi panjang dengan panjang 25 meter dan lebar 15 meter. Tentukan Benar (B) atau Salah (S) untuk pernyataan perhitungan di bawah ini:",
+            img: null,
+            statements: [
+                { id: 's1', text: "Luas keseluruhan taman bermain tersebut adalah 375 meter².", answer: 'B' },
+                { id: 's2', text: "Jumlah keliling taman tersebut adalah 80 meter.", answer: 'B' }
+            ]
+        });
+		bankSoal.push({
+            id: 30, type: 'bs',
+            text: "Siti mengerjakan PR sekolahnya selama 1 jam 45 menit. Tentukan apakah pernyataan berikut Benar (B) atau Salah (S): ",
+            img: null,
+            statements: [
+                { id: 's1', text: "Waktu Siti belajar setara dengan 105 menit.", answer: 'B' },
+                { id: 's2', text: "Jika Siti mulai belajar pada pukul 14.00 siang, ia akan menyelesaikan tugasnya pada pukul 15.45 sore.", answer: 'B' }
+            ]
+        });
 
         // Exam Session State
         let participant = { name: '', group: '' };
